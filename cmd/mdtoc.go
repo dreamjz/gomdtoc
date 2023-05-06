@@ -137,8 +137,19 @@ func readFrontMatter(input *string) (frontmatter string) {
 // WriteReadme create README.md and write TOC of directory
 func WriteReadme(root *MDDir) error {
 	//log.Printf(">>> Current Path: %s, Name: %s\n", root.Path, root.Name)
+	var oldContent string
+	var newContent string
+
 	tocFilename := "README.md"
 	readmePath := filepath.Join(root.Path, tocFilename)
+	cmtStart := "<!--- Generate by gomdtoc start --->"
+	cmtEnd := "<!--- Generate by gomdtoc end --->"
+
+	// README.md exists
+	c, err := os.ReadFile(readmePath)
+	if err == nil {
+		oldContent = string(c)
+	}
 
 	f, err := os.OpenFile(readmePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)
 	if err != nil {
@@ -151,15 +162,26 @@ func WriteReadme(root *MDDir) error {
 	if root.Name == "" {
 		title = "README"
 	}
+	fileTitle := fmt.Sprintf("# %s\n", title)
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("# %s\n", title))
+	sb.WriteString(cmtStart + "\n")
 	err = WriteTOC(root, root, &sb, 1)
 	if err != nil {
 		return err
 	}
+	sb.WriteString(cmtEnd + "\n")
 
-	_, err = f.WriteString(sb.String())
+	newContent = fileTitle + sb.String()
+	if len(strings.TrimSpace(oldContent)) > 0 {
+		regStr := fmt.Sprintf("(?s)%s.*%s", cmtStart, cmtEnd)
+		log.Printf(">>> Regexp: %s\n", regStr)
+		r := regexp.MustCompile(regStr)
+		oldToc := r.FindString(oldContent)
+		newContent = strings.Replace(oldContent, oldToc, sb.String(), 1)
+	}
+
+	_, err = f.WriteString(newContent)
 	if err != nil {
 		return err
 	}
