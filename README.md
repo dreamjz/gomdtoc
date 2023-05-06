@@ -11,7 +11,7 @@ $ go install "github.com/dreamjz/gomdtoc@latest"
 
 ## Binary file
 
-Download binary file from [Release]() 
+Download the binary file from [Release]() 
 
 ## 2. Usage
 
@@ -34,6 +34,14 @@ Flags:
 ```
 
 ## 3. Example
+
+- [Example](./example/README.md)
+
+  ```sh
+  $ gomdtoc ./example -r -s sub3-skip 
+  ```
+
+- [Existed Repo](https://github.com/dreamjz/my-notes)
 
 
 
