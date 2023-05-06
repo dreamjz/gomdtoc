@@ -11,7 +11,7 @@ $ go install "github.com/dreamjz/gomdtoc@latest"
 
 ## Binary file
 
-Download the binary file from [Release]() 
+Download the binary file from [Release](https://github.com/dreamjz/gomdtoc/releases) 
 
 ## 2. Usage
 
