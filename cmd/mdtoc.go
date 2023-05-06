@@ -31,6 +31,7 @@ func (mdd *MDDir) String() string {
 	return fmt.Sprintf("{Path: %q, Name: %q, MDFiles: %v, SubDir: %v}", mdd.Path, mdd.Name, mdd.MDFiles, mdd.SubDir)
 }
 
+// GenerateTOCFile generate TOC for directory into README.md
 func GenerateTOCFile(root string) {
 	start := time.Now()
 	rootNode := &MDDir{Path: root}
@@ -44,6 +45,7 @@ func GenerateTOCFile(root string) {
 	log.Printf("Processing Time: %v", delta)
 }
 
+// GenerateSkipMap generate map for skip directories
 func GenerateSkipMap(skipDirs []string) map[string]struct{} {
 	skipMap := make(map[string]struct{})
 	for _, v := range skipDirs {
@@ -52,9 +54,9 @@ func GenerateSkipMap(skipDirs []string) map[string]struct{} {
 	return skipMap
 }
 
+// WalkMDDir walk through directories to read title of markdown file
 func WalkMDDir(root *MDDir, skip map[string]struct{}) error {
 	headingMatcher := regexp.MustCompile(`(?m)^(\s*#\s+)(.+[^\r\n])`)
-	frontmatterMatcher := regexp.MustCompile(`(?s)(---)(.*?)(---)`)
 
 	f, err := os.Open(root.Path)
 	if err != nil {
@@ -74,6 +76,7 @@ func WalkMDDir(root *MDDir, skip map[string]struct{}) error {
 			continue
 		}
 		subPath := filepath.Join(root.Path, dirName)
+
 		if dir.IsDir() {
 			subDir := &MDDir{Path: subPath, Name: dirName}
 			err := WalkMDDir(subDir, skip)
@@ -82,6 +85,7 @@ func WalkMDDir(root *MDDir, skip map[string]struct{}) error {
 			}
 			root.SubDir = append(root.SubDir, subDir)
 		}
+
 		if !dir.IsDir() && strings.HasSuffix(dirName, ".md") {
 			content, err := os.ReadFile(subPath)
 			if err != nil {
@@ -92,25 +96,19 @@ func WalkMDDir(root *MDDir, skip map[string]struct{}) error {
 			headings := make([][]string, 6)
 
 			// read title from frontmatter
-			// frontmatter start from fist line of file
-			if len(contentStr) > 0 && contentStr[0:3] == "---" {
-				matchesF := frontmatterMatcher.FindAllStringSubmatch(contentStr, -1)
-				if len(matchesF) > 0 && len(matchesF[0]) > 0 {
-					frontmatter := matchesF[0][2]
-					//log.Printf(">>> File: %q,Frontmatter: %q", subPath, frontmatter)
-					m := map[string]interface{}{}
-					err := yaml.Unmarshal([]byte(frontmatter), &m)
-					if err != nil {
-						return err
-					}
-					if t, ok := m[titleField]; ok {
-						title := t.(string)
-						headings[0] = append(headings[0], title)
-					}
-				}
+			frontmatter := readFrontMatter(&contentStr)
+			//log.Printf(">>> File: %q,Frontmatter: %q", subPath, frontmatter)
+			m := map[string]interface{}{}
+			err = yaml.Unmarshal([]byte(frontmatter), &m)
+			if err != nil {
+				return err
+			}
+			if t, ok := m[titleField]; ok {
+				title := t.(string)
+				headings[0] = append(headings[0], title)
 			}
 
-			// read markdown Lv heading
+			// read markdown Lv1 heading
 			matchesH := headingMatcher.FindAllStringSubmatch(contentStr, -1)
 			for i := range matchesH {
 				headings[0] = append(headings[0], matchesH[i][2])
@@ -124,8 +122,21 @@ func WalkMDDir(root *MDDir, skip map[string]struct{}) error {
 	return nil
 }
 
+func readFrontMatter(input *string) (frontmatter string) {
+	frontmatterMatcher := regexp.MustCompile(`(?s)(---)(.*?)(---)`)
+	// frontmatter start from fist line of file
+	if len(*input) > 0 && (*input)[0:3] == "---" {
+		matchesF := frontmatterMatcher.FindAllStringSubmatch(*input, -1)
+		if len(matchesF) > 0 && len(matchesF[0]) > 0 {
+			frontmatter = matchesF[0][2]
+		}
+	}
+	return
+}
+
+// WriteReadme create README.md and write TOC of directory
 func WriteReadme(root *MDDir) error {
-	//fmt.Printf(">>> Current Path: %s, Name: %s\n", root.Path, root.Name)
+	//log.Printf(">>> Current Path: %s, Name: %s\n", root.Path, root.Name)
 	tocFilename := "README.md"
 	readmePath := filepath.Join(root.Path, tocFilename)
 
@@ -155,11 +166,12 @@ func WriteReadme(root *MDDir) error {
 	return nil
 }
 
+// WriteTOC write Table of Content for directory
 func WriteTOC(root *MDDir, currentDir *MDDir, sb *strings.Builder, depth int) error {
 	for _, mdir := range currentDir.SubDir {
 		relativePath := strings.TrimPrefix(mdir.Path, root.Path)
 		relativePath = strings.TrimPrefix(relativePath, string(os.PathSeparator))
-		//fmt.Printf(">>>>>> Root: %q, Current: %q, Relative Path: %q\n", root.Path, mdir.Path, relativePath)
+		//log.Printf(">>>>>> Root: %q, Current: %q, Relative Path: %q\n", root.Path, mdir.Path, relativePath)
 		sb.WriteString(fmt.Sprintf("%s- [%s](%s)\n", strings.Repeat(" ", depth*2), mdir.Name, relativePath))
 		err := WriteTOC(root, mdir, sb, depth+1)
 		if err != nil {
@@ -182,6 +194,8 @@ func WriteTOC(root *MDDir, currentDir *MDDir, sb *strings.Builder, depth int) er
 		}
 		relativePath := strings.TrimPrefix(currentDir.Path, root.Path)
 		relativePath = strings.TrimPrefix(relativePath, string(os.PathSeparator))
+		// if there are more than one lv1 headings
+		// use first one (order: frontmatter title, lv1 heading, ...)
 		sb.WriteString(fmt.Sprintf("%s - [%s](%s)\n", strings.Repeat(" ", depth*2), mf.Headings[0][0], filepath.Join(relativePath, mf.Name)))
 	}
 	return nil
