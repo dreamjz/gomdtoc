@@ -175,7 +175,7 @@ func WriteReadme(root *MDDir) error {
 	newContent = fileTitle + sb.String()
 	if len(strings.TrimSpace(oldContent)) > 0 {
 		regStr := fmt.Sprintf("(?s)%s.*%s", cmtStart, cmtEnd)
-		log.Printf(">>> Regexp: %s\n", regStr)
+		//log.Printf(">>> Regexp: %s\n", regStr)
 		r := regexp.MustCompile(regStr)
 		oldToc := r.FindString(oldContent)
 		newContent = strings.Replace(oldContent, oldToc, sb.String(), 1)
@@ -200,7 +200,7 @@ func WriteTOC(root *MDDir, currentDir *MDDir, sb *strings.Builder, depth int) er
 			return err
 		}
 
-		if recursive {
+		if recursive && len(mdir.MDFiles)+len(mdir.SubDir) > 0 {
 			err = WriteReadme(mdir)
 			if err != nil {
 				return err

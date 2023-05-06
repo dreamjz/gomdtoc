@@ -43,7 +43,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringSliceVarP(&skipDirs, "skip", "s", []string{}, "--skip name1,name2, ...")
-	rootCmd.PersistentFlags().BoolVarP(&recursive, "recursive", "r", false, "--recursive generate TOC file for every sub-directory; default false")
-	rootCmd.PersistentFlags().StringVarP(&titleField, "title", "t", "title", "--title title_field : specify the title field in frontmatter; default \"title\" ")
+	rootCmd.PersistentFlags().StringSliceVarP(&skipDirs, "skip", "s", []string{}, "--skip dir_name1,dir_name2, ...; skip specified directories")
+	rootCmd.PersistentFlags().BoolVarP(&recursive, "recursive", "r", false, "--recursive, default false; generate TOC file for every sub-directory ")
+	rootCmd.PersistentFlags().StringVarP(&titleField, "title", "t", "title", "--title title_field, specify the title field in frontmatter; default \"title\" ")
 }
