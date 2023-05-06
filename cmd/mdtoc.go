@@ -191,8 +191,7 @@ func WriteReadme(root *MDDir) error {
 // WriteTOC write Table of Content for directory
 func WriteTOC(root *MDDir, currentDir *MDDir, sb *strings.Builder, depth int) error {
 	for _, mdir := range currentDir.SubDir {
-		relativePath := strings.TrimPrefix(mdir.Path, root.Path)
-		relativePath = strings.TrimPrefix(relativePath, string(os.PathSeparator))
+		relativePath := generateRelativePath(mdir.Path, root.Path)
 		//log.Printf(">>>>>> Root: %q, Current: %q, Relative Path: %q\n", root.Path, mdir.Path, relativePath)
 		sb.WriteString(fmt.Sprintf("%s- [%s](%s)\n", strings.Repeat(" ", depth*2), mdir.Name, relativePath))
 		err := WriteTOC(root, mdir, sb, depth+1)
@@ -214,13 +213,20 @@ func WriteTOC(root *MDDir, currentDir *MDDir, sb *strings.Builder, depth int) er
 			log.Printf("Warning: No Frontmatter title or Lv1 Heading, %s\n", filepath.Join(currentDir.Path, mf.Name))
 			continue
 		}
-		relativePath := strings.TrimPrefix(currentDir.Path, root.Path)
-		relativePath = strings.TrimPrefix(relativePath, string(os.PathSeparator))
+		relativePath := generateRelativePath(currentDir.Path, root.Path)
 		// if there are more than one lv1 headings
 		// use first one (order: frontmatter title, lv1 heading, ...)
-		sb.WriteString(fmt.Sprintf("%s - [%s](%s)\n", strings.Repeat(" ", depth*2), mf.Headings[0][0], filepath.Join(relativePath, mf.Name)))
+		sb.WriteString(fmt.Sprintf("%s - [%s](%s)\n", strings.Repeat(" ", depth*2), mf.Headings[0][0], relativePath+"/"+mf.Name))
 	}
 	return nil
+}
+
+func generateRelativePath(current, root string) string {
+	relativePath := strings.TrimPrefix(current, root)
+	relativePath = strings.TrimPrefix(relativePath, string(os.PathSeparator))
+	relativePath = strings.ReplaceAll(relativePath, string(os.PathSeparator), "/")
+	//log.Printf(">>> current: %s, root: %s, relaticepath: %s", current, root, relativePath)
+	return relativePath
 }
 
 func check(err error) {
