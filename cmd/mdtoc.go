@@ -62,8 +62,10 @@ func WalkMDDir(root *MDDir, skip map[string]struct{}) error {
 	if err != nil {
 		return err
 	}
-
 	dirs, err := f.ReadDir(-1)
+	if err != nil {
+		return err
+	}
 	for _, dir := range dirs {
 		dirName := dir.Name()
 		if strings.HasPrefix(dir.Name(), ".") {
