@@ -1,7 +1,16 @@
 # gomdtoc
 CLI program to generate TOC(table of content) for markdown notes directory 
 ![](https://political-capable-roll.glitch.me/get/@dreamjz-gomdtoc?theme=rule34)
-## 1. Installation
+## 1. Example
+
+- [Example](./example)
+
+  ```sh
+  $ gomdtoc ./example -r -s sub3-skip 
+  ```
+
+- [Existed Repo](https://github.com/dreamjz/my-notes)
+## 2. Installation
 
 ### Install with `go`
 
@@ -13,7 +22,7 @@ $ go install "github.com/dreamjz/gomdtoc@latest"
 
 Download the binary file from [Release](https://github.com/dreamjz/gomdtoc/releases) 
 
-## 2. Usage
+## 3. Usage
 
 ```sh
 $ gomdtoc directory_path [flags]
@@ -33,15 +42,7 @@ Flags:
   -t, --title string   --title title_field, specify the title field in frontmatter  (default "title")
 ```
 
-## 3. Example
 
-- [Example](./example)
-
-  ```sh
-  $ gomdtoc ./example -r -s sub3-skip 
-  ```
-
-- [Existed Repo](https://github.com/dreamjz/my-notes)
 
 
 
