@@ -35,7 +35,7 @@ Flags:
 
 ## 3. Example
 
-- [Example](./example/README.md)
+- [Example](./example)
 
   ```sh
   $ gomdtoc ./example -r -s sub3-skip 
