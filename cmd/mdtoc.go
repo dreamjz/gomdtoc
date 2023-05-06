@@ -191,10 +191,14 @@ func WriteReadme(root *MDDir) error {
 // WriteTOC write Table of Content for directory
 func WriteTOC(root *MDDir, currentDir *MDDir, sb *strings.Builder, depth int) error {
 	for _, mdir := range currentDir.SubDir {
-		relativePath := generateRelativePath(mdir.Path, root.Path)
+		relativePath, err := generateRelativePath(mdir.Path, root.Path)
+		if err != nil {
+			return err
+		}
 		//log.Printf(">>>>>> Root: %q, Current: %q, Relative Path: %q\n", root.Path, mdir.Path, relativePath)
 		sb.WriteString(fmt.Sprintf("%s- [%s](%s)\n", strings.Repeat(" ", depth*2), mdir.Name, relativePath))
-		err := WriteTOC(root, mdir, sb, depth+1)
+
+		err = WriteTOC(root, mdir, sb, depth+1)
 		if err != nil {
 			return err
 		}
@@ -213,7 +217,11 @@ func WriteTOC(root *MDDir, currentDir *MDDir, sb *strings.Builder, depth int) er
 			log.Printf("Warning: No Frontmatter title or Lv1 Heading, %s\n", filepath.Join(currentDir.Path, mf.Name))
 			continue
 		}
-		relativePath := generateRelativePath(currentDir.Path, root.Path)
+
+		relativePath, err := generateRelativePath(currentDir.Path, root.Path)
+		if err != nil {
+			return err
+		}
 		// if there are more than one lv1 headings
 		// use first one (order: frontmatter title, lv1 heading, ...)
 		sb.WriteString(fmt.Sprintf("%s - [%s](%s)\n", strings.Repeat(" ", depth*2), mf.Headings[0][0], relativePath+"/"+mf.Name))
@@ -221,12 +229,14 @@ func WriteTOC(root *MDDir, currentDir *MDDir, sb *strings.Builder, depth int) er
 	return nil
 }
 
-func generateRelativePath(current, root string) string {
-	relativePath := strings.TrimPrefix(current, root)
-	relativePath = strings.TrimPrefix(relativePath, string(os.PathSeparator))
+func generateRelativePath(current, root string) (string, error) {
+	relativePath, err := filepath.Rel(root, current)
+	if err != nil {
+		return relativePath, err
+	}
 	relativePath = strings.ReplaceAll(relativePath, string(os.PathSeparator), "/")
-	//log.Printf(">>> current: %s, root: %s, relaticepath: %s", current, root, relativePath)
-	return relativePath
+	log.Printf(">>> current: %s, root: %s, relaticepath: %s", current, root, relativePath)
+	return relativePath, nil
 }
 
 func check(err error) {
