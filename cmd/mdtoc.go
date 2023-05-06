@@ -237,7 +237,7 @@ func generateRelativePath(current, root string) (string, error) {
 		return relativePath, err
 	}
 	relativePath = strings.ReplaceAll(relativePath, string(os.PathSeparator), "/")
-	log.Printf(">>> current: %s, root: %s, relaticepath: %s", current, root, relativePath)
+	//log.Printf(">>> current: %s, root: %s, relaticepath: %s", current, root, relativePath)
 	return relativePath, nil
 }
 
