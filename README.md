@@ -1,5 +1,5 @@
 # gomdtoc
-CLI program to generate TOC(table of content) for markdown notes directory 
+CLI program to generate TOC(table of content) for markdown notes directory, build withd [Cobra](https://github.com/spf13/cobra)
 ![](https://political-capable-roll.glitch.me/get/@dreamjz-gomdtoc?theme=rule34)
 ## 1. Example
 
