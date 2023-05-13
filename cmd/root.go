@@ -18,9 +18,9 @@ var (
 		Use:   "gomdtoc",
 		Short: "CLI program to generate toc for markdown notes",
 		Long:  `CLI program to generate toc for markdown notes directory`,
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			//root := "."
-			root := "E:\\tmp\\go-temp"
+			var root string
 			if len(args) > 0 {
 				root = args[0]
 			}

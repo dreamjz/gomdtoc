@@ -34,12 +34,14 @@ func (mdd *MDDir) String() string {
 // GenerateTOCFile generate TOC for directory into README.md
 func GenerateTOCFile(root string) {
 	start := time.Now()
+
 	rootNode := &MDDir{Path: root}
 	skipMap := GenerateSkipMap(skipDirs)
 	err := WalkMDDir(rootNode, skipMap)
 	check(err)
 	err = WriteReadme(rootNode)
 	check(err)
+
 	end := time.Now()
 	delta := end.Sub(start)
 	log.Printf("Processing Time: %v", delta)
@@ -66,6 +68,8 @@ func WalkMDDir(root *MDDir, skip map[string]struct{}) error {
 	if err != nil {
 		return err
 	}
+	f.Close()
+
 	for _, dir := range dirs {
 		dirName := dir.Name()
 		if strings.HasPrefix(dir.Name(), ".") {
@@ -172,7 +176,7 @@ func WriteReadme(root *MDDir) error {
 	if err != nil {
 		return err
 	}
-	sb.WriteString(cmtEnd + "\n")
+	sb.WriteString(cmtEnd)
 
 	newContent = fileTitle + sb.String()
 	if len(strings.TrimSpace(oldContent)) > 0 {
@@ -193,25 +197,26 @@ func WriteReadme(root *MDDir) error {
 // WriteTOC write Table of Content for directory
 func WriteTOC(root *MDDir, currentDir *MDDir, sb *strings.Builder, depth int) error {
 	for _, mdir := range currentDir.SubDir {
-		relativePath, err := generateRelativePath(mdir.Path, root.Path)
-		if err != nil {
-			return err
-		}
-		//log.Printf(">>>>>> Root: %q, Current: %q, Relative Path: %q\n", root.Path, mdir.Path, relativePath)
-		sb.WriteString(fmt.Sprintf("%s- [%s](%s)\n", strings.Repeat(" ", depth*2), mdir.Name, relativePath))
-
-		err = WriteTOC(root, mdir, sb, depth+1)
-		if err != nil {
-			return err
-		}
-
-		if recursive && len(mdir.MDFiles)+len(mdir.SubDir) > 0 {
-			err = WriteReadme(mdir)
+		if len(mdir.MDFiles)+len(mdir.SubDir) > 0 {
+			relativePath, err := generateRelativePath(mdir.Path, root.Path)
 			if err != nil {
 				return err
 			}
-		}
+			//log.Printf(">>>>>> Root: %q, Current: %q, Relative Path: %q\n", root.Path, mdir.Path, relativePath)
+			sb.WriteString(fmt.Sprintf("%s- [%s](%s)\n", strings.Repeat(" ", depth*2), mdir.Name, relativePath))
 
+			err = WriteTOC(root, mdir, sb, depth+1)
+			if err != nil {
+				return err
+			}
+
+			if recursive {
+				err = WriteReadme(mdir)
+				if err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	for _, mf := range currentDir.MDFiles {
