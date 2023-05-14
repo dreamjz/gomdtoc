@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/fvbommel/sortorder"
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 )
@@ -69,6 +71,11 @@ func WalkMDDir(root *MDDir, skip map[string]struct{}) error {
 		return err
 	}
 	f.Close()
+
+	// sort dirs by natural order
+	sort.Slice(dirs, func(i, j int) bool {
+		return sortorder.NaturalLess(rmExt(dirs[i].Name()), rmExt(dirs[j].Name()))
+	})
 
 	for _, dir := range dirs {
 		dirName := dir.Name()
@@ -250,4 +257,12 @@ func check(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func rmExt(filename string) string {
+	idx := strings.LastIndex(filename, ".md")
+	if idx != -1 {
+		filename = filename[:idx]
+	}
+	return filename
 }

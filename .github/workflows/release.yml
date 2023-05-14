@@ -37,6 +37,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
+          draft: true
           files: |-
             gomdtoc-linux-amd64
             gomdtoc-win-amd64.exe
